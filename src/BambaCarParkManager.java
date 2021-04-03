@@ -1,18 +1,45 @@
 
-//test
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class BambaCarParkManager implements CarParkManager {
 
-    private ArrayList<Vehicle> listOfVehicle = new ArrayList<Vehicle>();
     private static BambaCarParkManager instance = null;
+
+    private ArrayList<Vehicle> listOfVehicle = new ArrayList<Vehicle>();
+
+    private ArrayList<Vehicle> GroundFloor = new ArrayList<Vehicle>();
+    private ArrayList<Vehicle> FirstFloor = new ArrayList<Vehicle>();
+    private ArrayList<Vehicle> SecondFloor = new ArrayList<Vehicle>();
+
+
     private int availableSlots = 20;
+
+    private int groundAvailSlots = 80;
+    private int firstAvailSlots = 60;
+    private int secondAvailSlots = 70;
+
+    private boolean isGroundFloor;
+    private boolean isFirstFloor;
+    private boolean isSecondFloor;
+
     private double chargePerHour = 300;
     private double addCharge = 100;
     private double maxCharge = 3000;
     private int addFromthisHour = 3;
+
+    public boolean isGroundFloor() {
+        return isGroundFloor;
+    }
+
+    public boolean isFirstFloor() {
+        return isFirstFloor;
+    }
+
+    public boolean isSecondFloor() {
+        return isSecondFloor;
+    }
 
     //private constructor
     private BambaCarParkManager() {
@@ -33,6 +60,15 @@ public class BambaCarParkManager implements CarParkManager {
 
     @Override
     public synchronized void addVehicle(Vehicle obj) {
+        while (groundAvailSlots == 0 || firstAvailSlots == 0 || secondAvailSlots == 0) {
+            try {
+                System.out.println("Sorry...There are not space available for parking... Please Wait...");
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         //check whether the vehicle is already parked or not
         for (Vehicle item : listOfVehicle) {
             if (item.equals(obj)) {
@@ -41,25 +77,67 @@ public class BambaCarParkManager implements CarParkManager {
             }
         }
         // Check whether there are sufficient space available for any vehicle to park
-        if (listOfVehicle.size() < 20) {
+        if (GroundFloor.size() < 79 && FirstFloor.size() < 59 && SecondFloor.size() < 69) {
             if (obj instanceof Van) {
-                if (listOfVehicle.size() < 19) {
-                    listOfVehicle.add(obj);
-                    availableSlots -= 2;
-                    System.out.println("Available slots : " + availableSlots);
+                if (GroundFloor.size() < 79) {
+                    GroundFloor.add(obj);
+                    groundAvailSlots -= 2;
+                    if (groundAvailSlots < 0) {
+                        groundAvailSlots = 0;
+                    }
+                    System.out.println("Available slots GROUND : " + groundAvailSlots);
+                    System.out.println("\n");
+                } else if (FirstFloor.size() < 59) {
+                    FirstFloor.add(obj);
+                    firstAvailSlots -= 2;
+                    if (firstAvailSlots < 0) {
+                        firstAvailSlots = 0;
+                    }
+                    System.out.println("Available slots FIRST : " + firstAvailSlots);
+                    System.out.println("\n");
+                } else if (SecondFloor.size() < 69) {
+                    SecondFloor.add(obj);
+                    secondAvailSlots -= 2;
+                    if (secondAvailSlots < 0) {
+                        secondAvailSlots = 0;
+                    }
+                    System.out.println("Available slots SECOND : " + secondAvailSlots);
                     System.out.println("\n");
                 } else {
                     System.out.println("Sorry..There are no slots available to park your Van." + "\n");
                 }
             }
             if (obj instanceof MotorBike || obj instanceof Car) {
-                listOfVehicle.add(obj);
-                availableSlots--;
-                System.out.println("Available slots : " + availableSlots);
+                if (GroundFloor.size() < 79) {
+                    GroundFloor.add(obj);
+                    groundAvailSlots -= 1;
+                    if (groundAvailSlots < 0) {
+                        groundAvailSlots = 0;
+                    }
+                    System.out.println("Available slots GROUND : " + groundAvailSlots);
+                    System.out.println("\n");
+                } else if (FirstFloor.size() < 59) {
+                    FirstFloor.add(obj);
+                    firstAvailSlots -= 1;
+                    if (firstAvailSlots < 0) {
+                        firstAvailSlots = 0;
+                    }
+                    System.out.println("Available slots FIRST : " + firstAvailSlots);
+                    System.out.println("\n");
+                } else if (SecondFloor.size() < 69) {
+                    SecondFloor.add(obj);
+                    secondAvailSlots -= 1;
+                    if (secondAvailSlots < 0) {
+                        secondAvailSlots = 0;
+                    }
+                    System.out.println("Available slots SECOND : " + secondAvailSlots);
+                    System.out.println("\n");
+                } else {
+                    System.out.println("Sorry..There are no slots available to park your Vehicle." + "\n");
+                }
             }
-        } else {
-            System.out.println("Sorry...There are not space availble for parking...");
         }
+        notifyAll();
     }
 
     @Override
@@ -86,23 +164,72 @@ public class BambaCarParkManager implements CarParkManager {
 
     @Override
     public void printcurrentVehicles() {
-        Collections.sort(listOfVehicle, Collections.reverseOrder());
-        for (Vehicle item : listOfVehicle) {
-            if (item instanceof Van) {
-                System.out.println("Vehicle Type is a Van");
-            } else if (item instanceof MotorBike) {
-                System.out.println("Vehicle Type is a MotorBike");
-            } else {
-                System.out.println("Vehicle Type is a Car.");
+        Collections.sort(GroundFloor, Collections.reverseOrder());
+        Collections.sort(FirstFloor, Collections.reverseOrder());
+        Collections.sort(SecondFloor, Collections.reverseOrder());
+
+        if (GroundFloor.size() > 0) {
+            for (Vehicle item : GroundFloor) {
+                if (item instanceof Van) {
+                    System.out.println("Vehicle Type is a Van");
+                } else if (item instanceof MotorBike) {
+                    System.out.println("Vehicle Type is a MotorBike");
+                } else {
+                    System.out.println("Vehicle Type is a Car.");
+                }
+                System.out.println("******************");
+                System.out.println("ID Plate : " + item.getIdPlate());
+                System.out.println("Entry Time : "
+                        + item.getEntryDate().getHours() + ":" + item.getEntryDate().getMinutes()
+                        + ":" + item.getEntryDate().getSeconds() + "-" + item.getEntryDate().getDate()
+                        + "/" + item.getEntryDate().getMonth() + "/" + item.getEntryDate().getYear());
+                System.out.println("\n");
             }
-            System.out.println("******************");
-            System.out.println("ID Plate : " + item.getIdPlate());
-            System.out.println("Entry Time : "
-                    + item.getEntryDate().getHours() + ":" + item.getEntryDate().getMinutes()
-                    + ":" + item.getEntryDate().getSeconds() + "-" + item.getEntryDate().getDate()
-                    + "/" + item.getEntryDate().getMonth() + "/" + item.getEntryDate().getYear());
-            System.out.println("\n");
         }
+
+        if (FirstFloor.size() > 0) {
+            for (Vehicle item : FirstFloor) {
+                if (item instanceof Van) {
+                    System.out.println("Vehicle Type is a Van");
+                } else if (item instanceof MotorBike) {
+                    System.out.println("Vehicle Type is a MotorBike");
+                } else {
+                    System.out.println("Vehicle Type is a Car.");
+                }
+                System.out.println("******************");
+                System.out.println("ID Plate : " + item.getIdPlate());
+                System.out.println("Entry Time : "
+                        + item.getEntryDate().getHours() + ":" + item.getEntryDate().getMinutes()
+                        + ":" + item.getEntryDate().getSeconds() + "-" + item.getEntryDate().getDate()
+                        + "/" + item.getEntryDate().getMonth() + "/" + item.getEntryDate().getYear());
+                System.out.println("\n");
+            }
+        }
+
+        if (SecondFloor.size() > 0) {
+            for (Vehicle item : SecondFloor) {
+                if (item instanceof Van) {
+                    System.out.println("Vehicle Type is a Van");
+                } else if (item instanceof MotorBike) {
+                    System.out.println("Vehicle Type is a MotorBike");
+                } else {
+                    System.out.println("Vehicle Type is a Car.");
+                }
+                System.out.println("******************");
+                System.out.println("ID Plate : " + item.getIdPlate());
+                System.out.println("Entry Time : "
+                        + item.getEntryDate().getHours() + ":" + item.getEntryDate().getMinutes()
+                        + ":" + item.getEntryDate().getSeconds() + "-" + item.getEntryDate().getDate()
+                        + "/" + item.getEntryDate().getMonth() + "/" + item.getEntryDate().getYear());
+                System.out.println("\n");
+            }
+        }
+
+        if (GroundFloor.size() == 0 && FirstFloor.size() == 0 && SecondFloor.size() == 0) {
+            System.out.println("No vehicles currently parked");
+        }
+
+
     }
 
     @Override
